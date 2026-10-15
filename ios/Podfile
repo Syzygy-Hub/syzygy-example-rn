@@ -1,0 +1,93 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'SyzygyBase' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+
+    # Xcode 27 + RN 0.87 prebuilt XCFramework compatibility fix.
+    #
+    # Problem 1: CocoaPods generates OTHER_CFLAGS with
+    #   -fmodule-map-file=$(PODS_ROOT)/React-Core-prebuilt/Headers/module.modulemap
+    # but never creates that file. Xcode 27 treats a missing -fmodule-map-file as a
+    # hard error. Fix: symlink the xcframework headers into Headers/ and copy the
+    # module map there so the referenced path actually exists.
+    #
+    # Problem 2: The symlinked header layout nests each sub-module one extra level
+    # (e.g. RCTRequired/RCTRequired/RCTRequired.h) compared to what older separate
+    # pods used. Fix: add each sub-namespace dir as an extra HEADER_SEARCH_PATH.
+    pods_root = installer.config.project_pods_root
+    xcfw_headers = File.join(pods_root, 'React-Core-prebuilt', 'React.xcframework', 'Headers')
+    xcfw_modulemap = File.join(pods_root, 'React-Core-prebuilt', 'React.xcframework', 'Modules', 'module.modulemap')
+    target_headers = File.join(pods_root, 'React-Core-prebuilt', 'Headers')
+
+    if Dir.exist?(xcfw_headers) && File.exist?(xcfw_modulemap)
+      FileUtils.mkdir_p(target_headers)
+      Dir.entries(xcfw_headers).each do |entry|
+        next if entry.start_with?('.')
+        src  = File.join(xcfw_headers, entry)
+        dest = File.join(target_headers, entry)
+        next if File.exist?(dest) || File.symlink?(dest)
+        File.symlink(src, dest) if File.directory?(src)
+      end
+      # Create a placeholder module map so the -fmodule-map-file flag in
+      # OTHER_CFLAGS does not cause a hard error in Xcode 27. The framework
+      # module map inside the xcframework uses framework-context paths that
+      # do not work for static-library builds; an empty map is sufficient.
+      dst_map = File.join(target_headers, 'module.modulemap')
+      File.write(dst_map, "// placeholder\n") unless File.exist?(dst_map)
+
+      extra_paths = Dir.entries(target_headers)
+        .select { |e| !e.start_with?('.') && File.directory?(File.join(target_headers, e)) }
+        .map { |e| "\"$(PODS_ROOT)/React-Core-prebuilt/Headers/#{e}\"" }
+        .join(' ')
+
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |build_config|
+          existing = build_config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)'
+          build_config.build_settings['HEADER_SEARCH_PATHS'] = "#{existing} #{extra_paths}"
+        end
+      end
+
+      installer.aggregate_targets.each do |agg_target|
+        ['debug', 'release'].each do |config_name|
+          xcconfig_path = agg_target.xcconfig_path(config_name)
+          next unless File.exist?(xcconfig_path)
+          content = File.read(xcconfig_path)
+          if content =~ /^HEADER_SEARCH_PATHS\s*=/
+            content.gsub!(/^(HEADER_SEARCH_PATHS\s*=.*)$/, "\\1 #{extra_paths}")
+          else
+            content += "\nHEADER_SEARCH_PATHS = $(inherited) #{extra_paths}\n"
+          end
+          File.write(xcconfig_path, content)
+        end
+      end
+    end
+  end
+end

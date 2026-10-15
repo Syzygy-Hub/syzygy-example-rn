@@ -1,0 +1,21 @@
+diff --git a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/runOnSimulator.js b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/runOnSimulator.js
+index 35b8868..174bead 100644
+--- a/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/runOnSimulator.js
++++ b/node_modules/@react-native-community/cli-platform-apple/build/commands/runCommand/runOnSimulator.js
+@@ -42,7 +42,15 @@ async function runOnSimulator(xcodeProject, platform, mode, scheme, args, simula
+   const activeDeveloperDir = _child_process().default.execFileSync('xcode-select', ['-p'], {
+     encoding: 'utf8'
+   }).trim();
+-  _child_process().default.execFileSync('open', [`${activeDeveloperDir}/Applications/Simulator.app`, '--args', '-CurrentDeviceUDID', simulator.udid]);
++  const simulatorAppPath = `${activeDeveloperDir}/Applications/Simulator.app`;
++  const _fs = require('fs');
++  if (_fs.existsSync(simulatorAppPath)) {
++    _child_process().default.execFileSync('open', [simulatorAppPath, '--args', '-CurrentDeviceUDID', simulator.udid]);
++  } else {
++    // Xcode 27+ moved Simulator.app; boot via simctl and open via bundle ID
++    try { _child_process().default.execFileSync('xcrun', ['simctl', 'boot', simulator.udid], {stdio: 'ignore'}); } catch (_) {}
++    try { _child_process().default.execFileSync('open', ['-b', 'com.apple.iphonesimulator', '--args', '-CurrentDeviceUDID', simulator.udid]); } catch (_) {}
++  }
+   if (simulator.state !== 'Booted') {
+     bootSimulator(simulator);
+   }
