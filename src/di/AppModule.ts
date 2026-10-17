@@ -1,5 +1,5 @@
 /**
- * Syzygy DI Container wiring for SyzygyBase.
+ * Syzygy DI Container wiring for SyzygyExample.
  *
  * Registers all 5 layer dependencies (Foundation, Core, Services, AI, UI)
  * into a single root Container from syzygy-core-rn.
@@ -33,8 +33,19 @@ import {
 } from 'syzygy-services-rn';
 
 import { AuthRepository } from '../features/auth/data/AuthRepository';
+import { DemoAuthRepository } from '../features/auth/data/DemoAuthRepository';
 import { AuthUseCase } from '../features/auth/domain/AuthUseCase';
-import type { AuthUseCaseProtocol } from '../features/auth/domain/AuthUseCaseProtocol';
+import type {
+  AuthRepositoryProtocol,
+  AuthUseCaseProtocol,
+} from '../features/auth/domain/AuthUseCaseProtocol';
+
+/**
+ * Selects the login repository. On by default because this example is not
+ * connected to a backend. Set to `false` to use the network-backed
+ * `AuthRepository`, which calls the URLs in `NetworkSetup`.
+ */
+export const USE_DEMO_LOGIN = true;
 
 // ---------------------------------------------------------------------------
 // Root application container
@@ -177,14 +188,17 @@ export function initDI(): void {
 
   // --- Feature: AuthRepository (real implementation backed by FetchNetworkClient) ---
   AppContainer.register(DI_KEYS.authRepository, Lifetime.Singleton, c => {
-    const network = c.resolve<FetchNetworkClient>(DI_KEYS.networkClient);
     const storage = c.resolve<InMemoryStorageProvider>(DI_KEYS.storageProvider);
+    if (USE_DEMO_LOGIN) {
+      return new DemoAuthRepository(storage);
+    }
+    const network = c.resolve<FetchNetworkClient>(DI_KEYS.networkClient);
     return new AuthRepository(network, storage);
   });
 
   // --- Feature: AuthUseCase ---
   AppContainer.register(DI_KEYS.authUseCase, Lifetime.Singleton, c => {
-    const repo = c.resolve<AuthRepository>(DI_KEYS.authRepository);
+    const repo = c.resolve<AuthRepositoryProtocol>(DI_KEYS.authRepository);
     const storage = c.resolve<InMemoryStorageProvider>(DI_KEYS.storageProvider);
     return new AuthUseCase(repo, storage);
   });

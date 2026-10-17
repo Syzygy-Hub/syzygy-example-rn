@@ -18,7 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     appDelegate.window = newWindow
 
     factory.startReactNative(
-      withModuleName: "SyzygyBase",
+      withModuleName: "SyzygyExample",
       in: newWindow,
       launchOptions: nil
     )

@@ -8,6 +8,7 @@ import { getColors } from 'syzygy-ui-rn';
 
 import { AppModule } from '../di/AppModule';
 import { LoginScreen } from '../features/auth/presentation/LoginScreen';
+import { FeaturesScreen } from '../features/features/presentation/FeaturesScreen';
 import { HomeScreen } from '../features/home/presentation/HomeScreen';
 
 const c = getColors('light');
@@ -15,6 +16,7 @@ const c = getColors('light');
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
+  Features: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -69,9 +71,21 @@ function AppNavigator(): React.JSX.Element {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {authState === 'authenticated' ? (
-          <Stack.Screen name="Home">
-            {() => <HomeScreen onLogout={handleLogout} />}
-          </Stack.Screen>
+          <>
+            <Stack.Screen name="Home">
+              {({ navigation }) => (
+                <HomeScreen
+                  onLogout={handleLogout}
+                  onOpenFeatures={() => navigation.navigate('Features')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="Features">
+              {({ navigation }) => (
+                <FeaturesScreen onBack={() => navigation.goBack()} />
+              )}
+            </Stack.Screen>
+          </>
         ) : (
           <Stack.Screen name="Login">
             {() => <LoginScreen onLoginSuccess={handleLoginSuccess} />}

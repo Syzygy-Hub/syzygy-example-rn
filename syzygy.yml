@@ -1,18 +1,21 @@
-layer: base
-version: 3.0.0
-syzygy_foundation: "3.0.0"
-contracts:
-  - foundation
-  - core
-  - services
-  - ai
-  - ui
-dependencies:
-  core:
-    version: "3.0.0"
-  services:
-    version: "3.0.0"
-  ai:
-    version: "3.0.0"
-  ui:
-    version: "3.0.0"
+name: syzygy-example-rn
+type: example
+platform: rn
+language: typescript
+package_manager: npm
+license: MIT
+version: 1.0.0
+syzygy_foundation: ">=3.0.0"
+description: "Reference React Native app that composes the Syzygy layers with a demo login"
+demonstrates: [foundation, ui, core, services, ai, base]
+depends_on:
+  - name: syzygy-foundation-rn
+    version_constraint: ">=3.0.0"
+  - name: syzygy-core-rn
+    version_constraint: ">=3.0.0"
+  - name: syzygy-services-rn
+    version_constraint: ">=3.0.0"
+  - name: syzygy-ai-rn
+    version_constraint: ">=3.0.0"
+  - name: syzygy-ui-rn
+    version_constraint: ">=3.0.0"
