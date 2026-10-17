@@ -1,5 +1,9 @@
 import type { StorageProvider } from 'syzygy-foundation-rn';
-import { createStorageKey, SyzygyErrorCode, SyzygyErrorSeverity } from 'syzygy-foundation-rn';
+import {
+  createStorageKey,
+  SyzygyErrorCode,
+  SyzygyErrorSeverity,
+} from 'syzygy-foundation-rn';
 import { NetworkError } from 'syzygy-services-rn';
 
 import {

@@ -42,7 +42,6 @@ export function FeaturesScreen({
   const [services, setServices] = useState('');
   const [ai, setAi] = useState('');
   const [progress, setProgress] = useState(0);
-  const [runCount, setRunCount] = useState(0);
 
   const runDemos = useCallback(async () => {
     setProgress(0);
@@ -114,8 +113,10 @@ export function FeaturesScreen({
   }, []);
 
   useEffect(() => {
-    runDemos();
-  }, [runDemos, runCount]);
+    // Run once on mount. The run is deferred by one microtask so the state
+    // updates inside runDemos are not made synchronously in the effect body.
+    void Promise.resolve().then(runDemos);
+  }, [runDemos]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -150,7 +151,7 @@ export function FeaturesScreen({
             <ProgressBar progress={progress} />
             <PrimaryButton
               title="Run the layer demos"
-              onPress={() => setRunCount(count => count + 1)}
+              onPress={() => void runDemos()}
             />
           </View>
         </CardView>
