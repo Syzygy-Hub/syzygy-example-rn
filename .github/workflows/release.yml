@@ -1,0 +1,40 @@
+# Caller workflow: release for a React Native app in no-publish mode. Copy to .github/workflows/release.yml.
+# Uses app-release.yml: validates the version, extracts the CHANGELOG and creates a GitHub Release.
+# It never publishes to npm, so no publish-npm job is needed. Fires on strict bare-semver tags only.
+# This caller runs no CI gate; see the commented block at the end to opt in.
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions: {}
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    uses: Syzygy-Hub/.github/.github/workflows/app-release.yml@main
+    # Passes the optional WEBSITE_DISPATCH_TOKEN (used only when notify_website_repo is set).
+    secrets: inherit
+
+# Optional CI gate (opt-in, commented out). Replace the `release` job above with the block below.
+# publish-npm stays unchanged and still waits for release. The gate calls ci-gate.yml, which checks
+# that CI passed on the tagged commit (ci_gate defaults to enforce in ci-gate.yml).
+#
+#   gate:
+#     permissions:
+#       actions: read
+#       contents: read
+#     uses: Syzygy-Hub/.github/.github/workflows/ci-gate.yml@main
+#     with:
+#       sha: ${{ github.sha }}
+#       ci_workflow_name: ci.yml   # the caller's CI workflow file
+#
+#   release:
+#     needs: gate
+#     permissions:
+#       contents: write
+#     uses: Syzygy-Hub/.github/.github/workflows/app-release.yml@main
+#     secrets: inherit
