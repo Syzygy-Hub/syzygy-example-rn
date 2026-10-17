@@ -18,14 +18,19 @@ const layout = {
 
 export interface HomeScreenProps {
   onLogout?: () => void;
+  onOpenFeatures?: () => void;
 }
 
 /**
  * Minimal authenticated landing screen shown after a successful login.
  * Replace with the real Home feature as the app grows.
  */
-export function HomeScreen({ onLogout }: HomeScreenProps): React.JSX.Element {
+export function HomeScreen({
+  onLogout,
+  onOpenFeatures,
+}: HomeScreenProps): React.JSX.Element {
   const logout = useLoginViewModel(state => state.logout);
+  const user = useLoginViewModel(state => state.user);
 
   const handleLogout = async () => {
     await logout();
@@ -36,7 +41,12 @@ export function HomeScreen({ onLogout }: HomeScreenProps): React.JSX.Element {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.content}>
         <Text style={styles.title}>You&apos;re signed in</Text>
-        <Text style={styles.subtitle}>This is the Home screen.</Text>
+        <Text style={styles.subtitle}>
+          {user ? `Signed in as ${user.email}` : 'This is the Home screen.'}
+        </Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={onOpenFeatures}>
+          <Text style={styles.logoutText}>Open Features</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Log out</Text>
         </TouchableOpacity>

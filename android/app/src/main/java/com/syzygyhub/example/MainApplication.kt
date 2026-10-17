@@ -1,4 +1,4 @@
-package com.syzygyhub.base
+package com.syzygyhub.example
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -1,6 +1,6 @@
 {
-  "name": "SyzygyBase",
-  "version": "3.0.0",
+  "name": "syzygy-example",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "ios": "npm install && bundle install && cd ios && pod install && cd .. && npx react-native run-ios",
@@ -23,11 +23,11 @@
     "react-native-keychain": "^9.2.3",
     "react-native-safe-area-context": "5.10.1",
     "react-native-screens": "4.28.0",
-    "syzygy-ai-rn": "^3.0.0",
-    "syzygy-core-rn": "^3.0.0",
-    "syzygy-foundation-rn": "^3.0.0",
-    "syzygy-services-rn": "^3.0.0",
-    "syzygy-ui-rn": "^3.0.0",
+    "syzygy-ai-rn": "3.0.0",
+    "syzygy-core-rn": "3.0.0",
+    "syzygy-foundation-rn": "3.0.0",
+    "syzygy-services-rn": "3.0.0",
+    "syzygy-ui-rn": "3.0.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

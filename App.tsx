@@ -1,5 +1,5 @@
 /**
- * SyzygyBase App entry point.
+ * SyzygyExample App entry point.
  *
  * Initialises the DI container and wraps the component tree in
  * SyzygyThemeProvider so every component can access the design-system theme.
